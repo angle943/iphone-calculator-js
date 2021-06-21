@@ -30,12 +30,18 @@ const numberElArray = [
 ];
 
 
-// variables
+// variables and constants
 let valueStrInMemory = null;
 let operatorInMemory = null;
+const KEYDOWN_KEYS = [
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  '.', 'Enter', 'Escape', '+', '-', '=', '*', '/'
+];
 
 
 // Functions
+const getNumOfDigits = (valueStr) => [...valueStr].filter(char => /\d/.test(char)).length;
+
 const getValueAsStr = () => valueEl.textContent.split(',').join('');
 
 const getValueAsNum = () => {
@@ -43,6 +49,20 @@ const getValueAsNum = () => {
 };
 
 const setStrAsValue = (valueStr) => {
+  const digitCount = getNumOfDigits(valueStr);
+
+  if (digitCount < 6) {
+    valueEl.style.fontSize = '130px';
+  } else if (digitCount === 6) {
+    valueEl.style.fontSize = '120px';
+  } else if (digitCount === 7) {
+    valueEl.style.fontSize = '110px';
+  } else if (digitCount === 8) {
+    valueEl.style.fontSize = '100px';
+  } else if (digitCount >= 9) {
+    valueEl.style.fontSize = '90px';
+  }
+
   if (valueStr[valueStr.length - 1] === '.') {
     valueEl.textContent += '.';
     return;
@@ -54,15 +74,6 @@ const setStrAsValue = (valueStr) => {
       parseFloat(wholeNumStr).toLocaleString() + '.' + decimalStr;
   } else {
     valueEl.textContent = parseFloat(wholeNumStr).toLocaleString();
-  }
-};
-
-const handleNumberClick = (numStr) => {
-  const currentValueStr = getValueAsStr();
-  if (currentValueStr === '0') {
-    setStrAsValue(numStr);
-  } else {
-    setStrAsValue(currentValueStr + numStr);
   }
 };
 
@@ -83,6 +94,21 @@ const getResultOfOperationAsStr = () => {
   return newValueNum.toString();
 };
 
+
+// Event Handler Functions
+const handleNumberClick = (numStr) => {
+  const currentValueStr = getValueAsStr();
+  const currentValueCount = getNumOfDigits(currentValueStr);
+
+  if (currentValueCount >= 9) return;
+
+  if (currentValueStr === '0') {
+    setStrAsValue(numStr);
+  } else {
+    setStrAsValue(currentValueStr + numStr);
+  }
+};
+
 const handleOperatorClick = (operation) => {
   const currentValueStr = getValueAsStr();
 
@@ -97,16 +123,20 @@ const handleOperatorClick = (operation) => {
   setStrAsValue('0');
 };
 
+const handleDecimalClick = () => {
+  const currentValueStr = getValueAsStr();
+  if (!currentValueStr.includes('.')) {
+    setStrAsValue(currentValueStr + '.');
+  }
+};
 
-
-
-// Add Event Listeners to functions
-acEl.addEventListener('click', () => {
+const handleAcClick = () => {
   setStrAsValue('0');
   valueStrInMemory = null;
   operatorInMemory = null;
-});
-pmEl.addEventListener('click', () => {
+};
+
+const handlePmClick = () => {
   const currentValueNum = getValueAsNum();
   const currentValueStr = getValueAsStr();
 
@@ -119,15 +149,28 @@ pmEl.addEventListener('click', () => {
   } else {
     setStrAsValue(currentValueStr.substring(1));
   }
-});
-percentEl.addEventListener('click', () => {
+};
+
+const handlePercentClick = () => {
   const currentValueNum = getValueAsNum();
   const newValueNum = currentValueNum / 100;
   setStrAsValue(newValueNum.toString());
   valueStrInMemory = null;
   operatorInMemory = null;
-});
+};
 
+const handleEqualClick = () => {
+  if (valueStrInMemory) {
+    setStrAsValue(getResultOfOperationAsStr());
+    valueStrInMemory = null;
+    operatorInMemory = null;
+  }
+};
+
+// Add Event Listeners to functions
+acEl.addEventListener('click', handleAcClick);
+pmEl.addEventListener('click', handlePmClick);
+percentEl.addEventListener('click', handlePercentClick);
 
 // add event listeners to operators
 additionEl.addEventListener('click', () => {
@@ -142,13 +185,7 @@ multiplicationEl.addEventListener('click', () => {
 divisionEl.addEventListener('click', () => {
   handleOperatorClick('division');
 });
-equalEl.addEventListener('click', () => {
-  if (valueStrInMemory) {
-    setStrAsValue(getResultOfOperationAsStr());
-    valueStrInMemory = null;
-    operatorInMemory = null;
-  }
-});
+equalEl.addEventListener('click', handleEqualClick);
 
 
 // Add Event Listeners to numbers and decimal
@@ -158,10 +195,72 @@ for (let i=0; i < numberElArray.length; i++) {
     handleNumberClick(i.toString());
   });
 }
-decimalEl.addEventListener('click', () => {
-  const currentValueStr = getValueAsStr();
-  if (!currentValueStr.includes('.')) {
-    setStrAsValue(currentValueStr + '.');
+decimalEl.addEventListener('click', handleDecimalClick);
+
+
+// Add Event Listeners for keydown
+document.addEventListener('keydown', (e) => {
+  if (!KEYDOWN_KEYS.includes(e.key)) {
+    return;
+  }
+
+  e.preventDefault();
+
+  switch (e.key) {
+    case '0':
+      handleNumberClick('0');
+      break;
+    case '1':
+      handleNumberClick('1');
+      break;
+    case '2':
+      handleNumberClick('2');
+      break;
+    case '3':
+      handleNumberClick('3');
+      break;
+    case '4':
+      handleNumberClick('4');
+      break;
+    case '5':
+      handleNumberClick('5');
+      break;
+    case '6':
+      handleNumberClick('6');
+      break;
+    case '7':
+      handleNumberClick('7');
+      break;
+    case '8':
+      handleNumberClick('8');
+      break;
+    case '9':
+      handleNumberClick('9');
+      break;
+    case '.':
+      handleDecimalClick();
+      break;
+    case 'Enter':
+      handleEqualClick();
+      break;
+    case '=':
+      handleEqualClick();
+      break;
+    case 'Escape':
+      handleAcClick();
+      break;
+    case '+':
+      handleOperatorClick('addition');
+      break;
+    case '-':
+      handleOperatorClick('subtraction');
+      break;
+    case '*':
+      handleOperatorClick('multiplication');
+      break;
+    case '/':
+      handleOperatorClick('division');
+      break;
   }
 });
 
