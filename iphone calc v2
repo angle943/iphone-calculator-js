@@ -1,0 +1,251 @@
+// DOM Elements
+
+const hour = document.querySelector('.hour');
+const minute = document.querySelector('.minute');
+const value = document.querySelector('.value');
+
+// button function 
+
+const ac = document.querySelector('.ac');
+const pm = document.querySelector('.pm');
+const percent = document.querySelector('.percent');
+
+// button operator
+
+const addition = document.querySelector('.addition');
+const subtraction = document.querySelector('.subtraction');
+const multiplication = document.querySelector('.multiplication');
+const division = document.querySelector('.division');
+const equal = document.querySelector('.equal');
+
+// button number
+
+const decimal = document.querySelector('.decimal');
+const number0 = document.querySelector('.number-0');
+const number1 = document.querySelector('.number-1');
+const number2 = document.querySelector('.number-2');
+const number3 = document.querySelector('.number-3');
+const number4 = document.querySelector('.number-4');
+const number5 = document.querySelector('.number-5');
+const number6 = document.querySelector('.number-6');
+const number7 = document.querySelector('.number-7');
+const number8 = document.querySelector('.number-8');
+const number9 = document.querySelector('.number-9'); 
+const numberArray = [
+    number0,
+    number1,
+    number2,
+    number3,
+    number4,
+    number5,
+    number6,
+    number7,
+    number8,
+    number9,
+]
+
+// Variables
+
+let operatorInMemory = null;
+let firstOperand = null;
+let secondOperand = null;
+
+// Functions
+
+const updateTime = () => {
+    const currentTime = new Date();
+    let currentHour = currentTime.getHours();
+    const currentMinute = currentTime.getMinutes();
+    if (currentHour > 12) {
+        currentHour -= 12;
+    }
+    hour.textContent = currentHour.toString();
+    minute.textContent = currentMinute.toString().padStart(2, '0');
+}
+
+const getValueAsStr = () => value.textContent.split(',').join(''); 
+
+const getValueAsNum = () => {
+    return parseFloat(getValueAsStr());
+}
+
+// the main state updating function. Study this
+
+const updateState = (valueStr) => {
+    if (valueStr[valueStr.length - 1] === '.') {
+        value.textContent += '.';
+        return;
+    }
+
+    const [wholeNumStr, decimalStr] = valueStr.split('.');
+
+    if (decimalStr) {
+        value.textContent = 
+            parseFloat(wholeNumStr).toLocaleString() + '.' + decimalStr;
+    } else {
+        value.textContent = parseFloat(wholeNumStr).toLocaleString();
+    }
+}
+
+const handleNumberClick = (numStr) => {
+    const currentValueStr = getValueAsStr();
+
+    if (currentValueStr) {
+        if (firstOperand == currentValueStr) { // empty the state
+            updateState(numStr);
+        }
+        else { // add to state
+            updateState(currentValueStr + numStr);
+        }
+    }
+    else {
+        updateState(numStr);
+    }
+    resizeText();
+}
+
+const handleOperatorClick = (operation) => {
+    const currentValueStr = getValueAsStr();
+    operatorInMemory = operation;
+
+    if (!firstOperand) {
+        firstOperand = currentValueStr;
+    } else {
+        if (secondOperand && firstOperand != currentValueStr) {
+            updateState(getOperationResult());
+            resizeText();
+            firstOperand = getValueAsNum();
+        }
+    }
+}
+
+const getOperationResult = () => {
+    let newValueNum;
+
+    switch (operatorInMemory) {
+        case 'addition':
+            newValueNum = parseFloat(firstOperand) + parseFloat(secondOperand);
+            break;
+        case 'subtraction':
+            newValueNum = parseFloat(firstOperand) - parseFloat(secondOperand);
+            break;
+        case 'multiplication':
+            newValueNum = parseFloat(firstOperand) * parseFloat(secondOperand);
+            break;
+        case 'division':
+            newValueNum = parseFloat(firstOperand) / parseFloat(secondOperand);
+            break;
+    }
+
+    return newValueNum.toString();
+}
+
+const calculate = () => {
+    const currentValueStr = getValueAsStr();
+
+    if (secondOperand) {
+        if (firstOperand != currentValueStr) {
+            secondOperand = currentValueStr;
+        }
+        // if equals was clicked and then clicked again, dont update secondOperand
+    } else { // runs on first equals click in a chain
+        secondOperand = currentValueStr;
+    }
+
+    updateState(getOperationResult());
+    resizeText();
+    firstOperand = getValueAsNum();
+}
+
+const resizeText = () => {
+    const currentValueStr = getValueAsStr();
+    if (currentValueStr.length > 6) {
+        const multiplier = parseFloat(6 / currentValueStr.length);
+        const newSize = Math.floor(multiplier * 130);
+        value.style.fontSize = `${newSize}px`;
+    }
+    else {
+        value.style.fontSize = '130px';
+    }
+}
+
+const addEventListeners = () => {
+
+    // Event listeners - button function
+
+    ac.addEventListener('click', () => {
+        updateState('0');
+        resizeText();
+
+        firstOperand = null;
+        secondOperand = null;
+        operatorInMemory = null;
+    });
+    pm.addEventListener('click', () => {
+        const currentValueNum = getValueAsNum();
+        const currentStateStr = getValueAsStr();
+    
+        if (currentStateStr == '-0') {
+            updateState('0');
+            return;
+        }
+        if (currentValueNum >= 0) {
+            updateState('-' + currentValueNum);
+        } else {
+            updateState(currentStateStr.slice(1));
+        }
+        resizeText();
+    });
+    percent.addEventListener('click', () => {
+        const currentValueNum = getValueAsNum();
+        const newValueNum = currentValueNum / 100;
+        updateState(newValueNum.toString());
+
+        firstOperand = null;
+        secondOperand = null;
+        operatorInMemory = null;
+        resizeText();
+    });
+    
+    // Event listeners - button operator
+    
+    addition.addEventListener('click', () => {
+        handleOperatorClick('addition');
+    });
+    subtraction.addEventListener('click', () => {
+        handleOperatorClick('subtraction');
+    });
+    multiplication.addEventListener('click', () => {
+        handleOperatorClick('multiplication');
+    });
+    division.addEventListener('click', () => {
+        handleOperatorClick('division');
+    });
+    equal.addEventListener('click', () => {
+        calculate();
+        
+    });
+    
+    // Event listeners - button number, decimal
+    
+    for (let i = 0; i < numberArray.length; i++) {
+        numberArray[i].addEventListener('click', () => {
+            handleNumberClick(i.toString());
+        });
+    }
+    decimal.addEventListener('click', () => {
+        const currentStateStr = getValueAsStr();
+        if (!currentStateStr.includes('.')) {
+            value.textContent = currentStateStr + '.';
+        }
+    });
+}
+
+// Initialize app 
+
+addEventListeners();
+
+setInterval(updateTime, 1000);
+updateTime();
+
+// Added chain equals functionality, dynamic text resizing, and made it so that first operand stays displayed on operator button click (instead of changing to 0).
